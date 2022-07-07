@@ -154,9 +154,44 @@
          "width":100,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":4,
+         "name":"player_zones",
+         "objects":[
+                {
+                 "class":"",
+                 "height":0,
+                 "id":3,
+                 "name":"startZone",
+                 "point":true,
+                 "rotation":0,
+                 "visible":true,
+                 "width":0,
+                 "x":112,
+                 "y":336
+                }, 
+                {
+                 "class":"",
+                 "height":0,
+                 "id":4,
+                 "name":"endZone",
+                 "point":true,
+                 "rotation":0,
+                 "visible":true,
+                 "width":0,
+                 "x":1344,
+                 "y":208
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":4,
- "nextobjectid":1,
+ "nextlayerid":5,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.9.0",
