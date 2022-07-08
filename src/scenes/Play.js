@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import Player from "../entities/Player";
-import Birdman from "../entities/Birdman";
+import Enemies from "../groups/Enemies";
 
 class Play extends Phaser.Scene {
 	constructor(config) {
@@ -13,7 +13,7 @@ class Play extends Phaser.Scene {
 		const layers = this.createLayers(map);
 		const playerZones = this.getPlayerZones(layers.playerZones);
 		const player = this.createPlayer(playerZones.start);
-		const enemy = this.createEnemy();
+		const enemies = this.createEnemies(layers.enemySpawns);
 
 		this.createPlayerColliders(player, {
 			colliders: {
@@ -21,7 +21,7 @@ class Play extends Phaser.Scene {
 			},
 		});
 
-		this.createEnemyColliders(enemy, {
+		this.createEnemyColliders(enemies, {
 			colliders: {
 				platformsColliders: layers.platformsColliders,
 				player,
@@ -30,6 +30,40 @@ class Play extends Phaser.Scene {
 
 		this.createEndOfLevel(playerZones.end, player);
 		this.setupFollowUpCameraOn(player);
+
+		this.plotting = false;
+		this.graphics = this.add.graphics();
+		this.line = new Phaser.Geom.Line();
+		this.graphics.lineStyle(1, 0x00ff00);
+
+		this.input.on("pointerdown", this.startDrawing, this);
+		this.input.on("pointerup", this.finishDrawing, this);
+	}
+
+	update() {
+		if (this.plotting) {
+			const pointer = this.input.activePointer;
+
+			this.line.x2 = pointer.worldX;
+			this.line.y2 = pointer.worldY;
+			this.graphics.clear();
+			this.graphics.strokeLineShape(this.line);
+		}
+	}
+
+	startDrawing(pointer) {
+		this.line.x1 = pointer.worldX;
+		this.line.y1 = pointer.worldY;
+		this.plotting = true;
+	}
+
+	finishDrawing(pointer) {
+		this.line.x2 = pointer.worldX;
+		this.line.y2 = pointer.worldY;
+
+		this.graphics.clear();
+		this.graphics.strokeLineShape(this.line);
+		this.plotting = false;
 	}
 
 	createMap() {
@@ -44,26 +78,35 @@ class Play extends Phaser.Scene {
 		const environment = map.createStaticLayer("environment", tileset);
 		const platforms = map.createStaticLayer("platforms", tileset);
 		const playerZones = map.getObjectLayer("player_zones");
+		const enemySpawns = map.getObjectLayer("enemy_spawns");
 
 		platformsColliders.setCollisionByProperty({ collides: true });
 
-		return { platforms, environment, platformsColliders, playerZones };
+		return { platforms, environment, platformsColliders, playerZones, enemySpawns };
 	}
 
 	createPlayer(start) {
 		return new Player(this, start.x, start.y);
 	}
 
-	createEnemy() {
-		return new Birdman(this, 150, 100);
+	createEnemies(spawnLayer) {
+		const enemies = new Enemies(this);
+		const enemyTypes = enemies.getTypes();
+
+		spawnLayer.objects.forEach(spawnPoint => {
+			const enemy = new enemyTypes[spawnPoint.name](this, spawnPoint.x, spawnPoint.y);
+			enemies.add(enemy);
+		});
+
+		return enemies;
 	}
 
 	createPlayerColliders(player, { colliders }) {
 		player.addCollider(colliders.platformsColliders);
 	}
 
-	createEnemyColliders(enemy, { colliders }) {
-		enemy.addCollider(colliders.platformsColliders).addCollider(colliders.player);
+	createEnemyColliders(enemies, { colliders }) {
+		enemies.addCollider(colliders.platformsColliders).addCollider(colliders.player);
 	}
 
 	setupFollowUpCameraOn(player) {
