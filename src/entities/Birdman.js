@@ -10,7 +10,6 @@ class Birdman extends Enemy {
 	update(time, delta) {
 		super.update(time, delta);
 		this.play("birdman-idle", true);
-		this.setVelocity(30);
 	}
 }
 

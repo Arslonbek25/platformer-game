@@ -13,7 +13,7 @@ class Play extends Phaser.Scene {
 		const layers = this.createLayers(map);
 		const playerZones = this.getPlayerZones(layers.playerZones);
 		const player = this.createPlayer(playerZones.start);
-		const enemies = this.createEnemies(layers.enemySpawns);
+		const enemies = this.createEnemies(layers.enemySpawns, layers.platformsColliders);
 
 		this.createPlayerColliders(player, {
 			colliders: {
@@ -35,35 +35,24 @@ class Play extends Phaser.Scene {
 		this.graphics = this.add.graphics();
 		this.line = new Phaser.Geom.Line();
 		this.graphics.lineStyle(1, 0x00ff00);
-
-		this.input.on("pointerdown", this.startDrawing, this);
-		this.input.on("pointerup", this.finishDrawing, this);
 	}
 
-	update() {
-		if (this.plotting) {
-			const pointer = this.input.activePointer;
-
-			this.line.x2 = pointer.worldX;
-			this.line.y2 = pointer.worldY;
-			this.graphics.clear();
-			this.graphics.strokeLineShape(this.line);
-		}
-	}
-
-	startDrawing(pointer) {
-		this.line.x1 = pointer.worldX;
-		this.line.y1 = pointer.worldY;
-		this.plotting = true;
-	}
-
-	finishDrawing(pointer) {
+	finishDrawing(pointer, layer) {
 		this.line.x2 = pointer.worldX;
 		this.line.y2 = pointer.worldY;
 
 		this.graphics.clear();
 		this.graphics.strokeLineShape(this.line);
 		this.plotting = false;
+
+		this.tileHits = layer.getTilesWithinShape(this.line);
+
+		if (this.tileHits.length > 0)
+			this.tileHits.forEach(tileHit => {
+				tileHit.index !== -1 && tileHit.setCollision(true);
+			});
+
+		this.drawDebug(layer);
 	}
 
 	createMap() {
@@ -89,12 +78,14 @@ class Play extends Phaser.Scene {
 		return new Player(this, start.x, start.y);
 	}
 
-	createEnemies(spawnLayer) {
+	createEnemies(spawnLayer, platformColliders) {
 		const enemies = new Enemies(this);
 		const enemyTypes = enemies.getTypes();
 
-		spawnLayer.objects.forEach(spawnPoint => {
+		spawnLayer.objects.forEach((spawnPoint, i) => {
+			// if (i === 1) return;
 			const enemy = new enemyTypes[spawnPoint.name](this, spawnPoint.x, spawnPoint.y);
+			enemy.setPlatformColliders(platformColliders);
 			enemies.add(enemy);
 		});
 
