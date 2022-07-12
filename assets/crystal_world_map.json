@@ -216,7 +216,19 @@
                  "rotation":0,
                  "visible":true,
                  "width":0,
-                 "x":704,
+                 "x":576,
+                 "y":336
+                }, 
+                {
+                 "class":"",
+                 "height":0,
+                 "id":7,
+                 "name":"Birdman",
+                 "point":true,
+                 "rotation":0,
+                 "visible":true,
+                 "width":0,
+                 "x":1024,
                  "y":336
                 }],
          "opacity":1,
@@ -226,7 +238,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":7,
+ "nextobjectid":8,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.9.0",

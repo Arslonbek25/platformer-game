@@ -82,8 +82,7 @@ class Play extends Phaser.Scene {
 		const enemies = new Enemies(this);
 		const enemyTypes = enemies.getTypes();
 
-		spawnLayer.objects.forEach((spawnPoint, i) => {
-			// if (i === 1) return;
+		spawnLayer.objects.forEach(spawnPoint => {
 			const enemy = new enemyTypes[spawnPoint.name](this, spawnPoint.x, spawnPoint.y);
 			enemy.setPlatformColliders(platformColliders);
 			enemies.add(enemy);
@@ -97,7 +96,13 @@ class Play extends Phaser.Scene {
 	}
 
 	createEnemyColliders(enemies, { colliders }) {
-		enemies.addCollider(colliders.platformsColliders).addCollider(colliders.player);
+		enemies
+			.addCollider(colliders.platformsColliders)
+			.addCollider(colliders.player, this.onPlayerCollision);
+	}
+
+	onPlayerCollision(enemy, player) {
+		player.takeHit(enemy);
 	}
 
 	setupFollowUpCameraOn(player) {

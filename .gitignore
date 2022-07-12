@@ -3,6 +3,7 @@ node_modules
 build
 # Mac Files
 .DS_Store
+.vscode
 
 # Logs
 logs
