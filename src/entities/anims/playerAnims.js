@@ -23,4 +23,10 @@ export default anims => {
 		frameRate: 14,
 		repeat: 0
 	});
+	anims.create({
+		key: "player-slide",
+		frames: anims.generateFrameNumbers("player-slide-sheet", { start: 0, end: 2 }),
+		frameRate: 20,
+		repeat: 0
+	});
 };

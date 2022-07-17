@@ -9,7 +9,6 @@ class SpriteEffect extends Phaser.Physics.Arcade.Sprite {
 
 		this.effectName = effectName;
 		this.impactPosition = impactPosition;
-		this.target = null;
 
 		this.on("animationcomplete", animation => {
 			if (animation.key === this.effectName) this.destroy();

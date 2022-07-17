@@ -11,10 +11,10 @@ class Projectile extends Phaser.Physics.Arcade.Sprite {
 		this.speed = 300;
 		this.maxDistance = 500;
 		this.travelDistance = 0;
-		this.damage = 10;
+		this.damage = key === "fireball-1" ? 35 : 20;
 		this.cooldown = 500;
 
-		this.setSize(this.width-13, this.height-19);
+		this.body.setSize(this.width - 13, this.height - 20);
 
 		this.effectManager = new EffectManager(this.scene);
 	}
@@ -35,6 +35,7 @@ class Projectile extends Phaser.Physics.Arcade.Sprite {
 		this.travelDistance = 0;
 		const impactPosition = { x: this.x, y: this.y };
 		this.body.reset(0, 0);
+
 		this.effectManager.playEffectOn("hit-effect", target, impactPosition);
 	}
 
@@ -43,10 +44,11 @@ class Projectile extends Phaser.Physics.Arcade.Sprite {
 		this.setVisible(active);
 	}
 
-	fire(x, y) {
+	fire(x, y, anim) {
 		this.activateProjectile(true);
 		this.body.reset(x, y);
 		this.setVelocityX(this.speed);
+		anim && this.play(anim, true);
 	}
 }
 

@@ -1,24 +1,28 @@
 import Phaser from "phaser";
 import Projectile from "./Projectile";
+import collidable from "../mixins/collidable";
 
 class Projectiles extends Phaser.Physics.Arcade.Group {
-	constructor(scene) {
+	constructor(scene, key) {
 		super(scene.physics.world, scene);
 
+		Object.assign(this, collidable);
+		
 		this.createMultiple({
 			frameQuantity: 5,
 			active: false,
 			visible: false,
-			key: "iceball",
+			key,
 			classType: Projectile,
 		});
+		
 	}
 
-	fireProjectile(initiator) {
+	fireProjectile(initiator, anim) {
 		const projectile = this.getFirstDead(false);
 
+		if (!projectile) return;
 		if (
-			projectile &&
 			this.timeFromLastProjectile &&
 			this.timeFromLastProjectile + projectile.cooldown > Date.now()
 		)
@@ -37,7 +41,8 @@ class Projectiles extends Phaser.Physics.Arcade.Group {
 			centerX = center.x - 10;
 		}
 
-		projectile.fire(centerX, center.y);
+		if (!centerX) return;
+		projectile.fire(centerX, center.y, anim);
 		this.timeFromLastProjectile = Date.now();
 	}
 }

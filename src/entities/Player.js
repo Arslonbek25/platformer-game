@@ -4,6 +4,8 @@ import initAnims from "./anims/playerAnims";
 import collidable from "../mixins/collidable";
 import Projectiles from "../attacks/Projectiles";
 import anims from "../mixins/anims";
+import MeleeWeapon from "../attacks/MeleeWeapon";
+import EventEmitter from "../events/Emitter";
 
 class Player extends Phaser.Physics.Arcade.Sprite {
 	constructor(scene, x, y) {
@@ -24,13 +26,19 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 		this.gravity = 500;
 		this.playerSpeed = 180;
 		this.jumpCount = 0;
-		this.consecutiveJumps = 1;
+		this.consecutiveJumps = 100;
 		this.hasBeenHit = false;
 		this.bounceVelocity = 250;
 		this.cursors = this.scene.input.keyboard.createCursorKeys();
 		this.health = 100;
 		this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
-		this.projectiles = new Projectiles(this.scene);
+		this.projectiles = new Projectiles(this.scene, "iceball-1");
+		this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, "sword-default");
+
+		this.jumpSound = this.scene.sound.add("jump", { volume: 0.2 });
+		this.projectileSound = this.scene.sound.add("projectile", { volume: 0.2 });
+		this.stepSound = this.scene.sound.add("step", { volume: 0.2 });
+		this.swipeSound = this.scene.sound.add("swipe", { volume: 0.2 });
 
 		const { width, height } = this.scene.config;
 
@@ -49,9 +57,16 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
 		initAnims(this.scene.anims);
 
-		this.scene.input.keyboard.on("keydown-Q", () => {
-			this.projectiles.fireProjectile(this);
-			this.play("throw", true);
+		this.handleAttacks();
+		this.handleMovements();
+
+		this.scene.time.addEvent({
+			delay: 350,
+			repeat: -1,
+			callbackScope: this,
+			callback: () => {
+				if (this.isPlayingAnims("run")) this.stepSound.play();
+			},
 		});
 	}
 
@@ -60,7 +75,13 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	update() {
-		if (this.hasBeenHit) return;
+		if (this.hasBeenHit || this.isSliding || !this.body) return;
+
+		if (this.getBounds().top > this.scene.config.height) {
+			EventEmitter.emit("PLAYER_LOSE");
+			return;
+		}
+
 		const { left, right, space } = this.cursors;
 		const isSpaceJustDown = Phaser.Input.Keyboard.JustDown(space);
 		const onFloor = this.body.onFloor();
@@ -78,6 +99,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 		}
 
 		if (isSpaceJustDown && (onFloor || this.jumpCount < this.consecutiveJumps)) {
+			this.jumpSound.play();
 			this.setVelocityY(-this.playerSpeed * 2);
 			this.jumpCount++;
 		}
@@ -86,7 +108,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 			this.jumpCount = 0;
 		}
 
-		if (this.isPlayingAnims("throw")) {
+		if (this.isPlayingAnims("throw") || this.isPlayingAnims("player-slide")) {
 			return;
 		}
 
@@ -95,6 +117,45 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 				? this.play("idle", true)
 				: this.play("run", true)
 			: this.play("jump");
+	}
+
+	handleAttacks() {
+		this.scene.input.keyboard.on("keydown-Q", () => {
+			this.projectileSound.play();
+			this.projectiles.fireProjectile(this, "iceball");
+			this.play("throw", true);
+		});
+
+		this.scene.input.keyboard.on("keydown-E", () => {
+			this.swipeSound.play();
+
+			if (
+				this.timeFromLastHit &&
+				this.timeFromLastHit + this.meleeWeapon.attackSpeed > Date.now()
+			)
+				return;
+
+			this.meleeWeapon.swing(this);
+			this.play("throw", true);
+			this.timeFromLastHit = Date.now();
+		});
+	}
+
+	handleMovements() {
+		this.scene.input.keyboard.on("keydown-DOWN", () => {
+			// if (!this.body.onFloor()) return;
+			this.body.setSize(this.width, this.height / 2);
+			this.setOffset(0, this.height / 2);
+			this.setVelocityX(0);
+			this.play("player-slide", true);
+			this.isSliding = true;
+		});
+
+		this.scene.input.keyboard.on("keyup-DOWN", () => {
+			this.body.setSize(this.width, 38);
+			this.setOffset(0, 0);
+			this.isSliding = false;
+		});
 	}
 
 	playDamageTween() {
@@ -106,20 +167,35 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 		});
 	}
 
-	bounceOff() {
-		this.body.touching.right
-			? this.setVelocityX(-this.bounceVelocity)
-			: this.setVelocityX(this.bounceVelocity);
+	bounceOff(source) {
+		if (source.body) {
+			this.body.touching.right
+				? this.setVelocityX(-this.bounceVelocity)
+				: this.setVelocityX(this.bounceVelocity);
+		} else {
+			this.body.blocked.right
+				? this.setVelocityX(-this.bounceVelocity)
+				: this.setVelocityX(this.bounceVelocity);
+		}
+
 		setTimeout(() => this.setVelocityY(-this.bounceVelocity), 0);
 	}
 
-	takeHit(initiator) {
+	takeHit(source) {
 		if (this.hasBeenHit) return;
+
+		this.health -= source.damage || source.properties.damage || 0;
+		if (this.health <= 0) {
+			EventEmitter.emit("PLAYER_LOSE");
+			return;
+		}
+
 		this.hasBeenHit = true;
-		this.bounceOff();
+		this.bounceOff(source);
 		const hitAnim = this.playDamageTween();
-		this.health -= initiator.damage;
+
 		this.hp.decrease(this.health);
+		source.deliverHit && source.deliverHit(this);
 
 		this.scene.time.delayedCall(1000, () => {
 			this.hasBeenHit = false;

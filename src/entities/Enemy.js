@@ -26,14 +26,12 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
 		this.maxPatrolDistance = 300;
 		this.currentPatrolDistance = 0;
 		this.rayGraphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0xaa00aa } });
-		this.health = 20;
+		this.health = 50;
 		this.damage = 20;
 		this.body.setGravityY(this.gravity);
 		this.setCollideWorldBounds(true);
 		this.setOrigin(0.5, 1);
 		this.setImmovable(true);
-		this.setSize(20, 42);
-		this.setOffset(8, 22);
 		this.setVelocityX(this.speed);
 	}
 
@@ -59,7 +57,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
 		this.currentPatrolDistance += Math.abs(this.body.deltaX());
 
 		const { ray, hasHit } = this.raycast(this.body, this.platformCollidersLayer, {
-			precision: 20,
+			precision: 10,
 			steepness: 0.1,
 		});
 
@@ -94,6 +92,8 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
 			this.setCollideWorldBounds(false);
 		}
 	}
+
+	deliverHit() {}
 }
 
 export default Enemy;
