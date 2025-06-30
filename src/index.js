@@ -7,8 +7,8 @@ import CreditsScene from "./scenes/Credits";
 
 const MAP_WIDTH = 1600;
 
-const WIDTH = document.body.offsetWidth;
-const HEIGHT = 600;
+const WIDTH = Math.min(window.innerWidth, 1280);
+const HEIGHT = Math.min(window.innerHeight, 720); // Increased from 600 to 720
 const ZOOM_FACTOR = 1.5;
 
 const SHARED_CONFIG = {
@@ -26,7 +26,7 @@ const SHARED_CONFIG = {
 		x: WIDTH / ZOOM_FACTOR + (WIDTH - WIDTH / ZOOM_FACTOR) / 2,
 		y: HEIGHT / ZOOM_FACTOR + (HEIGHT - HEIGHT / ZOOM_FACTOR) / 2,
 	},
-	lastLevel: 2
+	lastLevel: 2,
 };
 
 const Scenes = [PreloadScene, Menu, LevelScene, PlayScene, CreditsScene];
@@ -37,6 +37,12 @@ const config = {
 	type: Phaser.AUTO,
 	...SHARED_CONFIG,
 	pixelArt: true,
+	scale: {
+		mode: Phaser.Scale.ENVELOP,
+		autoCenter: Phaser.Scale.CENTER_BOTH,
+		width: WIDTH,
+		height: HEIGHT,
+	},
 	physics: {
 		default: "arcade",
 		arcade: {

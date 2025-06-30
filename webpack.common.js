@@ -12,6 +12,7 @@ module.exports = {
 	output: {
 		filename: "[name].js",
 		path: path.resolve(__dirname, "build"),
+		publicPath: "/",
 	},
 	optimization: {
 		splitChunks: {
@@ -36,7 +37,9 @@ module.exports = {
 		],
 	},
 	devServer: {
-		contentBase: path.resolve(__dirname, "build"),
+		static: {
+			directory: path.resolve(__dirname, "build"),
+		},
 		compress: true,
 		port: 3000,
 	},
@@ -51,8 +54,8 @@ module.exports = {
 		new CopyPlugin({
 			patterns: [
 				{
-					from: path.resolve(__dirname, "assets/**/*"),
-					to: path.resolve(__dirname, "build"),
+					from: path.resolve(__dirname, "assets"),
+					to: path.resolve(__dirname, "build/assets"),
 				},
 			],
 		}),

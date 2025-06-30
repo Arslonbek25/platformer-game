@@ -25,7 +25,6 @@ class Play extends Phaser.Scene {
 		const enemies = this.createEnemies(layers.enemySpawns, layers.platformsColliders);
 		const collectables = this.createCollectables(layers.collectables);
 
-
 		this.createPlayerColliders(player, {
 			colliders: {
 				platformsColliders: layers.platformsColliders,
@@ -54,8 +53,8 @@ class Play extends Phaser.Scene {
 	}
 
 	playBgMusic() {
-		// if (this.sound.get("theme")) return;
-		// this.sound.add("theme", { loop: true, volume: 0.1 }).play();
+		if (this.sound.get("theme")) return;
+		this.sound.add("theme", { loop: true, volume: 0.1 }).play();
 	}
 
 	createBG(map) {
@@ -115,9 +114,6 @@ class Play extends Phaser.Scene {
 
 	createLayers(map) {
 		const tileset = map.getTileset("main_lev_build_1");
-		// const tilesetBg = map.getTileset("bg_spikes_tileset");
-
-		// map.createStaticLayer("distance", tilesetBg);
 
 		const platformsColliders = map
 			.createStaticLayer("platforms_colliders", tileset)
